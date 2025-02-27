@@ -10,7 +10,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Verbindung zu MongoDB herstellen (ersetze ggf. die URL mit deiner MongoDB-Verbindungszeichenfolge)
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error(err));
@@ -30,19 +29,16 @@ app.get('/recipes/category/:categoryId', async (req, res) => {
 // Route, um alle Kategorien abzurufen
 app.get('/categories', async (req, res) => {
   try {
-    const categories = await Category.find().sort({ sortOrder: 1 });
+    const categories = await Category.find()
+    .sort({ sortOrder: 1 })
+    .populate('recipes');  // Hier werden die Recipe-IDs mit den vollständigen Recipe-Dokumenten ersetzt
+
+    console.log(categories);
     res.json(categories);  // Alle Kategorien sortiert nach `sortOrder`
   } catch (error) {
     res.status(500).json({ message: 'Fehler beim Abrufen der Kategorien', error });
   }
 });
-
-// Rezept löschen
-app.delete('/recipes/:id', async (req, res) => {
-  await Recipe.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Recipe deleted' });
-});
-
 
 // Favoritenstatus umschalten
 app.put('/recipes/:id/favorite', async (req, res) => {

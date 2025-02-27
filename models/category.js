@@ -19,6 +19,10 @@ const categorySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,  // Das Erstellungsdatum der Kategorie
   },
+  recipes: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Recipe'  // Verweis auf das Category-Modell
+  },
 });
 
 const Category = mongoose.model('Category', categorySchema);
