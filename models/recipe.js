@@ -23,8 +23,7 @@ const recipeSchema = new mongoose.Schema({
     required: true    
   },
   image: {
-    type: String,
-    default: 'https://baconmockup.com/150/150',  // Standardbild, falls keines hochgeladen wird
+    type: String   
   },
   createdAt: {
     type: Date,
