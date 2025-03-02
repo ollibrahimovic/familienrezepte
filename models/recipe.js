@@ -25,6 +25,9 @@ const recipeSchema = new mongoose.Schema({
   image: {
     type: String   
   },
+  zubereitungszeit: {
+    type: Number   
+  },
   createdAt: {
     type: Date,
     default: Date.now,  // Das Rezept wird mit dem aktuellen Datum erstellt

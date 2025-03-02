@@ -40,6 +40,14 @@ app.get('/categories', async (req, res) => {
   }
 });
 
+// Ein einzelne Category abrufen
+app.get('/category/:id', async (req, res) => {
+  const cat = await Category.findById(req.params.id)
+  .populate('recipes');  // Hier werden die Recipe-IDs mit den vollständigen Recipe-Dokumenten ersetzt
+
+  res.json(cat);
+});
+
 // Favoritenstatus umschalten
 app.put('/recipes/:id/favorite', async (req, res) => {
     const recipe = await Recipe.findById(req.params.id);

@@ -7,6 +7,9 @@ const categorySchema = new mongoose.Schema({
     required: true,  // Der Name der Kategorie ist erforderlich
     unique: true,    // Der Name sollte einzigartig sein
   },
+  image: { 
+    type: String
+  },
   description: {
     type: String,
     required: false, // Eine Beschreibung der Kategorie (optional)
