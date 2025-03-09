@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require('cors');
 const mongoose = require("mongoose");
-const Category = require("./models/Category");
-const Recipe  = require("./models/Recipe");
-const User  = require("./models/User");
+const Category = require("./models/CategoryModel");
+const Recipe  = require("./models/RecipeModel");
+const User  = require("./models/UserModel");
 
 const app = express();
 app.use(cors());
