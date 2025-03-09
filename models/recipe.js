@@ -1,42 +1,15 @@
 const mongoose = require('mongoose');
 
-const recipeSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,  // Das Rezept benötigt einen Namen
-    trim: true,      // Entfernt führende und abschließende Leerzeichen
-  },
-  portionsangabe: {
-    type: String,    
-    trim: true,      // Entfernt führende und abschließende Leerzeichen
-  },
-  description: {
-    type: String,
-    required: true,  // Das Rezept benötigt eine Beschreibung
-  },
-  ingredients: {
-    type: [String]
-  },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',  // Verweis auf das Category-Modell
-    required: true    
-  },
-  image: {
-    type: String   
-  },
-  zubereitungszeit: {
-    type: Number   
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,  // Das Rezept wird mit dem aktuellen Datum erstellt
-  },
-  isFavorite: { 
-    type: Boolean, 
-    default: false 
-  }
+const RecipeSchema = new mongoose.Schema({
+  title: String,
+  servings: String,
+  description: String,
+  ingredients: [String],
+  category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+  image: String,
+  preparationTime: Number,
+  addedAt: { type: Date, default: Date.now },
 });
 
-const Recipe = mongoose.model('Recipe', recipeSchema);
+const Recipe = mongoose.model('Recipe', RecipeSchema);
 module.exports = Recipe;

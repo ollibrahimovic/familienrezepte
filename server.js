@@ -1,105 +1,127 @@
-const express = require('express');
-const mongoose = require('mongoose');
+const express = require("express");
 const cors = require('cors');
+const mongoose = require("mongoose");
+const Category = require("./models/Category");
+const Recipe  = require("./models/Recipe");
+const User  = require("./models/User");
 
-const Recipe = require('./models/recipe'); // Dein Rezeptmodell
-const Category = require('./models/category'); // Dein Kategoriemodell
 const app = express();
-
-// Middleware einrichten
 app.use(cors());
 app.use(express.json());
 
+// MongoDB Connection
+// Verbindung zu MongoDB herstellen
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error(err));
+;
 
-// REST-API Endpunkte
-
-// Route, um alle Rezepte einer bestimmten Kategorie abzurufen
-app.get('/recipes/category/:categoryId', async (req, res) => {
-  try {
-    const recipes = await Recipe.find({ category: req.params.categoryId }).populate('category');
-    res.json(recipes);  // Alle Rezepte mit der dazugehörigen Kategorie
-  } catch (error) {
-    res.status(500).json({ message: 'Fehler beim Abrufen der Rezepte', error });
-  }
+// Recipe Endpoints
+app.post("/recipes", async (req, res) => {
+  const recipe = new Recipe(req.body);
+  await recipe.save();
+  res.status(201).json(recipe);
 });
 
-// Route, um alle Kategorien abzurufen
-app.get('/categories', async (req, res) => {
-  try {
-    const categories = await Category.find()
-    .sort({ sortOrder: 1 })
-    .populate('recipes');  // Hier werden die Recipe-IDs mit den vollständigen Recipe-Dokumenten ersetzt
-
-    console.log(categories);
-    res.json(categories);  // Alle Kategorien sortiert nach `sortOrder`
-  } catch (error) {
-    res.status(500).json({ message: 'Fehler beim Abrufen der Kategorien', error });
-  }
+app.delete("/recipes/:id", async (req, res) => {
+  await Recipe.findByIdAndDelete(req.params.id);
+  res.status(204).send();
 });
 
-// Ein einzelne Category abrufen
-app.get('/category/:id', async (req, res) => {
-  const cat = await Category.findById(req.params.id)
-  .populate('recipes');  // Hier werden die Recipe-IDs mit den vollständigen Recipe-Dokumenten ersetzt
-
-  res.json(cat);
-});
-
-// Favoritenstatus umschalten
-app.put('/recipes/:id/favorite', async (req, res) => {
-    const recipe = await Recipe.findById(req.params.id);
-    if (recipe) {
-      recipe.isFavorite = !recipe.isFavorite;
-      await recipe.save();
-      res.json(recipe);
-    } else {
-      res.status(404).json({ message: 'Recipe not found' });
-    }
-  });
- 
-
-// Alle Rezepte abrufen
-app.get('/recipes', async (req, res) => {
-  const recipes = await Recipe.find();
-  res.json(recipes);
-});
-
-// Ein einzelnes Rezept abrufen
-app.get('/recipes/:id', async (req, res) => {
-  const recipe = await Recipe.findById(req.params.id);
+app.put("/recipes/:id", async (req, res) => {
+  const recipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, { new: true });
   res.json(recipe);
 });
 
-// Neues Rezept hinzufügen
-app.post('/recipes', async (req, res) => {
-  const newRecipe = new Recipe(req.body);
-  await newRecipe.save();
-  const category = await Category.findById(newRecipe.category);
-  category.recipes.push(newRecipe._id);
-  category.save();
-  res.json(newRecipe);
+app.get("/recipes/:id", async (req, res) => {
+  let recipe = await Recipe.findById(req.params.id).populate("category");
+  res.json(recipe);
 });
 
-// Rezept aktualisieren
-app.put('/recipes/:id', async (req, res) => {
-  const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updatedRecipe);
+app.get("/recipes", async (req, res) => {
+  const recipes = await Recipe.find().populate("category");
+  res.json(recipes);
 });
 
-// Rezept löschen
-app.delete('/recipes/:id', async (req, res) => {
-  await Recipe.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Recipe deleted' });
+app.get("/recipes/category/:categoryId", async (req, res) => {
+  const recipes = await Recipe.find({ category: req.params.categoryId });
+  res.json(recipes);
 });
 
-// Kategorie löschen
-app.delete('/category/:id', async (req, res) => {
+// Category Endpoints
+app.post("/categories", async (req, res) => {
+  const category = new Category(req.body);
+  await category.save();
+  res.status(201).json(category);
+});
+
+app.delete("/categories/:id", async (req, res) => {
   await Category.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Recipe deleted' });
+  res.status(204).send();
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.get("/categories", async (req, res) => {
+  const categories = await Category.find().sort({ sorting: 1 });
+  res.json(categories);
+});
+
+
+app.get("/categories/:id", async (req, res) => {
+  let category = await Category.findById(req.params.id).populate("recipes");
+  res.json(category);
+});
+
+// User Endpoints
+app.post("/users", async (req, res) => {
+  const user = new User(req.body);
+  await user.save();
+  res.status(201).json(user);
+});
+
+app.get("/users/:userId", async (req, res) => {
+  let user = await User.findOne({ userId: req.params.userId }).populate("favorites");
+  if (!user) {
+    user = new User({ userId: req.params.userId, favorites: [] });
+    await user.save();
+  }
+  res.json(user);
+});
+
+app.get("/users/:userId/favorites/:recipeId", async (req, res) => {
+  const user = await User.findById(req.params.userId);
+  if (!user) return res.status(404).send("User not found");
+  var isMyFav = false;
+  const index = user.favorites.indexOf(req.params.recipeId);
+  if (index === -1) {
+    isMyFav = false;
+  } else {
+    isMyFav = true;
+  }
+  res.json(isMyFav);
+});
+
+app.post("/users/:userId/favorites/:recipeId", async (req, res) => {
+  const user = await User.findById(req.params.userId);
+  if (!user) return res.status(404).send("User not found");
+
+  const index = user.favorites.indexOf(req.params.recipeId);
+  if (index === -1) {
+    user.favorites.push(req.params.recipeId);
+  } else {
+    user.favorites.splice(index, 1);
+  }
+  await user.save();
+  const userRet = await User.findById(req.params.userId).populate("favorites");
+
+  res.json(userRet);
+});
+
+app.delete("/users/:id", async (req, res) => {
+  await User.findByIdAndDelete(req.params.id);
+  res.status(204).send();
+});
+
+// Start Server
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
