@@ -20,6 +20,12 @@ mongoose.connect(process.env.MONGODB_URI)
 app.post("/recipes", async (req, res) => {
   const recipe = new Recipe(req.body);
   await recipe.save();
+
+  const cat = await Category.findById(recipe.category);
+  if(cat) {
+    cat.recipes.push(recipe.id);
+    await cat.save();
+  }
   res.status(201).json(recipe);
 });
 
